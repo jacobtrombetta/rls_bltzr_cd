@@ -19,6 +19,10 @@ build --config=clang
 build --action_env CC=/usr/bin/clang-18
 build --action_env CXX=/usr/bin/clang++-18
 
+# Statically link libstdc++
+build --action_env=BAZEL_LINKLIBS='-l%:libstdc++.a'
+build --action_env=BAZEL_LINKOPTS='-static-libstdc++ -lm'
+
 # https://github.com/bazel-contrib/rules_cuda/issues/1
 # build --ui_event_filters=-INFO
 

@@ -1,13 +1,14 @@
 # rls_bltzr_cd
 The goal of `rls_bltzr_cd` is to create a minimal, compiling project using [`rules_cuda`](https://github.com/bazel-contrib/rules_cuda) with the clang complier. 
 
-As of right now, I can:
+As of right now, I was able to:
 - Compile the code on my system using clang-18 and the CUDA toolkit 12.1.
 - Recreate the nvcc compiler bug and demonstrate that clang does not exhibit the same issue.
+- Compile the code using the Blitzar Docker container. I needed to updated the version of clang as outlined in the [Install clang 18](#install-clang-18) section.
 
 ## Prerequisites
 ### System info
-I have a System76 laptop running Ubuntu 20.04 LTS Jammy. The default clang version for Ubuntu 20.04 is 14. The CUDA toolkit I tested with is 12.1.
+I have a System76 laptop running Ubuntu 20.04 LTS Jammy. The default clang version for Ubuntu 20.04 is 14, so I needed to install clang 18.
 
 ### Install clang 18
 I used the LLVM repository script for clang since Ubuntu 20.04 only allows you to install clang versions up to clang 15 [link](https://linux.how2shout.com/how-to-install-clang-on-ubuntu-linux/).
@@ -23,17 +24,11 @@ sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 
 sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
 ```
 
-Note, setting the default clang compiler version to 18 might be optional if the following lines are added to `.bazelrc`.
-```
-build --action_env CC=/usr/bin/clang-18
-build --action_env CXX=/usr/bin/clang++-18
-```
-
 ### Other requirements
-This repo assumes `bazelisk` and the CUDA toolkit are installed on your system.
+If you are running locally, this repo assumes clang 18, `bazelisk`, and the CUDA toolkit are installed on your system.
 
 ## rls_bltzr_cd packages
-To build all the packages in `rls_bltzr_cd`:
+To build all the packages in `rls_bltzr_cd`
 ```
 bazelisk build //...
 ```
@@ -80,16 +75,44 @@ sudo apt install libstdc++-12-dev
 ``` 
 Note, I ran into this error before I upgraded my clang compiler to 18, so I am not sure this is an issue.
 
-### Clang warning
-Just an FYI, clang issues the following warning `clang: warning: CUDA version 12.1 is only partially supported` when building packages in `rls_bltzr_cd`.
+### Support statically linking the standard c++ library
+Follow the Google discussion, [How to link libstdc++ statically with Bazel?](https://groups.google.com/g/bazel-discuss/c/WM2OzIejonc/m/xgmN50ThAAAJ), I've added the following lines to the `.bazelrc` file
+```
+build --action_env=BAZEL_LINKLIBS='-l%:libstdc++.a'
+build --action_env=BAZEL_LINKOPTS='-static-libstdc++ -lm'
+```
 
-### Clang will attempt to use CUDA toolkit 12.2 as if it were 12.1
-As of two months ago, Intel LLVM project's instructions for compiling CUDA with Clang states:
+To test, I added a dependency to `<iostream>` in the `coroutine` component. After compiling with the lines above I verified the shared object dependencies.
+```
+ldd ./bazel-bin/coroutine/main    
+  linux-vdso.so.1 (0x00007ffd75dd0000)
+  libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007f08db52a000)
+  libcudart.so.12 => /usr/local/cuda/targets/x86_64-linux/lib/libcudart.so.12 (0x00007f08db200000)
+  libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f08db50a000)
+  libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f08dafd8000)
+  /lib64/ld-linux-x86-64.so.2 (0x00007f08db70e000)
+  libdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x00007f08db503000)
+  libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f08db4fe000)
+  librt.so.1 => /lib/x86_64-linux-gnu/librt.so.1 (0x00007f08db4f9000)
+```
 
-> "CUDA is supported since llvm 3.9. Clang currently supports CUDA 7.0 through 12.1. If clang detects a newer CUDA version, it will issue a warning and will attempt to use detected CUDA SDK it as if it were CUDA 12.1."
+Without the build action lines above, `libstdc++.so` is now in the shared object dependencies list.
+```
+ldd ./bazel-bin/coroutine/main
+  linux-vdso.so.1 (0x00007ffcbd956000)
+  libcudart.so.12 => /usr/local/cuda/targets/x86_64-linux/lib/libcudart.so.12 (0x00007f9e6aa00000)
+  libstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007f9e6a7d4000)
+  libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007f9e6ad47000)
+  libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f9e6a5ac000)
+  /lib64/ld-linux-x86-64.so.2 (0x00007f9e6ae3e000)
+  libdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x00007f9e6ad40000)
+  libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f9e6ad3b000)
+  librt.so.1 => /lib/x86_64-linux-gnu/librt.so.1 (0x00007f9e6ad36000)
+  libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f9e6ad16000)
+```
+TODO(jacob.trombetta) - Clang still issued a warning: `clang: warning: argument unused during compilation: '-static-libstdc++'`. I'm not sure if testing the shared object dependencies list on the binary is best way to verify if `libstdc++` has been statically linked. 
 
-I have not been able to test this yet. See [link](https://github.com/intel/llvm/blob/e600d7922489635290fd2cb63300d865fc72ee72/llvm/docs/CompileCudaWithLLVM.rst#prerequisites).
 
 ## Useful links
 - [CUDA Rules for Bazel](https://github.com/bazel-contrib/rules_cuda/tree/main#cuda-rules-for-bazel)
-- [Compiling CUDA with Clang](https://github.com/intel/llvm/blob/e600d7922489635290fd2cb63300d865fc72ee72/llvm/docs/CompileCudaWithLLVM.rst#compiling-cuda-with-clang) 
+- [LLVM Project](https://github.com/llvm/llvm-project)
