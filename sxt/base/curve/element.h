@@ -14,24 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "sxt/base/device/property.h"
+#pragma once
 
-#include <cuda.h>
-#include <cuda_runtime.h>
+#include <concepts>
 
-namespace sxt::basdv {
+namespace sxt::bascrv {
 //--------------------------------------------------------------------------------------------------
-// get_num_devices
+// element
 //--------------------------------------------------------------------------------------------------
-int get_num_devices() noexcept {
-  static int num_devices = []() noexcept {
-    int res;
-    auto rcode = cudaGetDeviceCount(&res);
-    if (rcode != cudaSuccess) {
-      return 0;
-    }
-    return res;
-  }();
-  return num_devices;
-}
-} // namespace sxt::basdv
+template <class T>
+concept element = requires(T& res, const T& e) {
+  double_element(res, e);
+  add(res, e, e);
+  neg(res, e);
+  { T::identity() } noexcept -> std::same_as<T>;
+  mark(res);
+  { is_marked(e) } noexcept -> std::same_as<bool>;
+};
+} // namespace sxt::bascrv

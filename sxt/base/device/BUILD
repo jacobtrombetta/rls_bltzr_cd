@@ -37,8 +37,7 @@ sxt_cc_component(
     ],
     deps = [
         "//sxt/base/type:raw_cuda_event",
-        "@local_cuda//:cuda_headers",
-        "@local_cuda//:cuda_runtime_static",
+        "@rules_cuda//cuda:runtime",
     ],
 )
 
@@ -51,8 +50,7 @@ sxt_cc_component(
     deps = [
         "//sxt/base/type:raw_cuda_event",
         "//sxt/base/type:raw_stream",
-        "@local_cuda//:cuda_headers",
-        "@local_cuda//:cuda_runtime_static",
+        "@rules_cuda//cuda:runtime",
     ],
 )
 
@@ -70,16 +68,12 @@ sxt_cc_component(
 
 sxt_cc_component(
     name = "property",
-    impl_deps = [
-        "//sxt/base/error:panic",
-    ],
     test_deps = [
         "//sxt/base/test:unit_test",
     ],
     deps = [
         "//sxt/base/type:raw_stream",
-        "@local_cuda//:cuda_headers",
-        "@local_cuda//:cuda_runtime_static",
+        "@rules_cuda//cuda:runtime",
     ],
 )
 
@@ -91,21 +85,19 @@ sxt_cc_component(
         ":stream",
         ":state",
         "//sxt/base/error:panic",
-        "@local_cuda//:cuda_headers",
-        "@local_cuda//:cuda_runtime_static",
+        "@rules_cuda//cuda:runtime",
     ],
     test_deps = [
         ":pointer_attributes",
         ":state",
         "//sxt/base/test:unit_test",
-        "@local_cuda//:cuda_headers",
-        "@local_cuda//:cuda_runtime_static",
+        "@rules_cuda//cuda:runtime",
     ],
     deps = [
         "//sxt/base/concept:memcpyable_ranges",
+        "//sxt/base/container:span",
         "//sxt/base/error:assert",
         "//sxt/base/type:raw_stream",
-        "//sxt/base/container:span",
     ],
 )
 
@@ -151,8 +143,7 @@ sxt_cc_component(
     ],
     deps = [
         ":device_map",
-        "@local_cuda//:cuda_headers",
-        "@local_cuda//:cuda_runtime_static",
+        "@rules_cuda//cuda:runtime",
     ],
 )
 
@@ -166,8 +157,7 @@ sxt_cc_component(
         "//sxt/base/test:unit_test",
     ],
     deps = [
-        "@local_cuda//:cuda_headers",
-        "@local_cuda//:cuda_runtime_static",
+        "@rules_cuda//cuda:runtime",
     ],
 )
 
@@ -179,7 +169,6 @@ sxt_cc_component(
     with_test = False,
     deps = [
         "//sxt/base/type:raw_stream",
-        "@local_cuda//:cuda_headers",
-        "@local_cuda//:cuda_runtime_static",
+        "@rules_cuda//cuda:runtime",
     ],
 )

@@ -14,24 +14,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "sxt/base/device/property.h"
-
-#include <cuda.h>
-#include <cuda_runtime.h>
-
-namespace sxt::basdv {
-//--------------------------------------------------------------------------------------------------
-// get_num_devices
-//--------------------------------------------------------------------------------------------------
-int get_num_devices() noexcept {
-  static int num_devices = []() noexcept {
-    int res;
-    auto rcode = cudaGetDeviceCount(&res);
-    if (rcode != cudaSuccess) {
-      return 0;
-    }
-    return res;
-  }();
-  return num_devices;
-}
-} // namespace sxt::basdv
+#include "sxt/base/curve/element.h"
