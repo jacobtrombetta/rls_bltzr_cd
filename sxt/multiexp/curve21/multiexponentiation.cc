@@ -48,7 +48,7 @@ namespace sxt::mtxc21 {
 //--------------------------------------------------------------------------------------------------
 static xena::future<> async_compute_multiexponentiation_impl(
     memmg::managed_array<c21t::element_p3>& products, basct::span<uint8_t> or_all,
-    const xendv::event_future<basct::cspan<c21t::element_p3>>& generators_event,
+    xendv::event_future<basct::cspan<c21t::element_p3>>& generators_event,
     mtxb::exponent_sequence exponents) noexcept {
   auto num_bytes = exponents.element_nbytes;
   basdv::stream stream;
