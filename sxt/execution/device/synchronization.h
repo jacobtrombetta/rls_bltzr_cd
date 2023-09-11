@@ -80,7 +80,7 @@ xena::future<std::remove_cvref_t<T>> await_and_own_stream(basdv::stream&& stream
 // synchronize_event
 //--------------------------------------------------------------------------------------------------
 template <class T>
-void synchronize_event(bast::raw_stream_t stream, event_future<T>& future) noexcept {
+void synchronize_event(bast::raw_stream_t stream, const event_future<T>& future) noexcept {
   auto& event_maybe = future.event();
   if (!event_maybe) {
     return;

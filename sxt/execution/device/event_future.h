@@ -51,7 +51,7 @@ public:
   const T& value() const noexcept { return value_; }
   T& value() noexcept { return value_; }
 
-  std::optional<basdv::event>& event() noexcept { return event_; }
+  const std::optional<basdv::event>& event() const noexcept { return event_; }
 
   operator xena::future<T>() && noexcept {
     if (!event_) {
